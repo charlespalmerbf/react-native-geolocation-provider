@@ -6,13 +6,19 @@
 
 Native Core Location and Android LocationManager bindings for React Native.
 
-## React Native support
+## Why this package exists
 
-This package is implemented as a React Native TurboModule using codegen, rather
-than the deprecated legacy bridge module used by older geolocation packages. It
-is intended for current React Native applications that use the New Architecture
-tooling, while still exposing the familiar `getCurrentPosition`,
-`watchPosition`, `clearWatch`, and `stopObserving` JavaScript API.
+This package is intended as a maintained replacement for
+`@react-native-community/geolocation`. The community package has seen limited
+maintenance for modern React Native versions, while many applications still need
+a small native geolocation API that works with current Android, iOS, and React
+Native New Architecture tooling.
+
+It is implemented as a React Native TurboModule using codegen, rather than the
+deprecated legacy bridge module used by older geolocation packages. The
+JavaScript API keeps the familiar `getCurrentPosition`, `watchPosition`,
+`clearWatch`, and `stopObserving` methods so existing usage can be migrated with
+minimal application changes.
 
 ## Installation
 
@@ -32,6 +38,43 @@ This project is a monorepo managed using
 [Yarn workspaces](https://yarnpkg.com/features/workspaces). It contains the
 library package at the repository root and the React Native example app in
 `example`.
+
+## Example app
+
+The example app provides a simple manual test screen for the native module. It
+includes separate buttons for one-shot current location requests and continuous
+watch updates, plus an on-screen log panel for positions and errors.
+
+To run it:
+
+```sh
+yarn
+yarn example android
+```
+
+For iOS, install pods before running:
+
+```sh
+cd example/ios && pod install
+cd ../..
+yarn example ios
+```
+
+The example app does not request runtime location permission automatically. Grant
+location permission in the host app or device settings before testing. On real
+devices, the first high-accuracy GPS fix can still take several seconds,
+especially indoors. Keeping `watchPosition` active can warm the device location
+provider before a one-shot request.
+
+## Improvements over the community package
+
+- Uses React Native TurboModule/codegen rather than the old bridge module.
+- Uses current native Android and iOS location APIs directly.
+- Provides both promise and callback forms for `getCurrentPosition`.
+- Emits watcher updates immediately instead of filtering startup fixes in JS.
+- Supports Android `interval`, `fastestInterval`, and `distanceFilter`.
+- Stops native observation automatically when the final watcher is cleared.
+- Uses a 30 second default current-location timeout for slower GPS cold starts.
 
 ## Current location
 
