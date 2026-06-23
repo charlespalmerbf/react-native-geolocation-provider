@@ -1,5 +1,5 @@
+#import <CoreLocation/CoreLocation.h>
 #import <GeolocationProviderSpec/GeolocationProviderSpec.h>
 
-@interface GeolocationProvider : NSObject <NativeGeolocationProviderSpec>
-
+@interface GeolocationProvider : NativeGeolocationProviderSpecBase <NativeGeolocationProviderSpec, CLLocationManagerDelegate>
 @end
