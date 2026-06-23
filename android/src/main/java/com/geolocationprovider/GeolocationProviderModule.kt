@@ -44,7 +44,7 @@ class GeolocationProviderModule(private val reactContext: ReactApplicationContex
       return
     }
 
-    val timeout = parsed.optLong("timeout", 15000L).coerceAtLeast(1L)
+    val timeout = parsed.optLong("timeout", 30000L).coerceAtLeast(1L)
     var completed = false
     lateinit var timeoutTask: Runnable
     val listener = object : LocationListener {
@@ -74,7 +74,7 @@ class GeolocationProviderModule(private val reactContext: ReactApplicationContex
         promise.reject("3", "Location request timed out")
       }
     }
-    locationManager.requestSingleUpdate(provider, listener, Looper.getMainLooper())
+    locationManager.requestLocationUpdates(provider, 0L, 0f, listener, Looper.getMainLooper())
     handler.postDelayed(timeoutTask, timeout)
   }
 

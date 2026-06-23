@@ -13,13 +13,6 @@ tooling, while still exposing the familiar `getCurrentPosition`,
 ## Installation
 
 ```sh
-npm install react-native-geolocation-provider
-cd ios && pod install
-```
-
-Or with Yarn:
-
-```sh
 yarn add react-native-geolocation-provider
 cd ios && pod install
 ```
@@ -29,6 +22,13 @@ Add `NSLocationWhenInUseUsageDescription` to the iOS application Info.plist.
 Android coarse and fine location permissions are merged from this library's
 manifest.
 
+## Repository structure
+
+This project is a monorepo managed using
+[Yarn workspaces](https://yarnpkg.com/features/workspaces). It contains the
+library package at the repository root and the React Native example app in
+`example`.
+
 ## Current location
 
 ```ts
@@ -36,7 +36,7 @@ import { getCurrentPosition } from 'react-native-geolocation-provider';
 
 const position = await getCurrentPosition({
   enableHighAccuracy: true,
-  timeout: 15_000,
+  timeout: 30_000,
   maximumAge: 5_000,
 });
 ```

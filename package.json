@@ -1,6 +1,6 @@
 {
   "name": "react-native-geolocation-provider",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "A geolocation provider specifically for react native",
   "main": "./lib/module/index.js",
   "types": "./lib/typescript/src/index.d.ts",
@@ -44,6 +44,10 @@
   },
   "keywords": [
     "react-native",
+    "geolocation",
+    "location",
+    "gps",
+    "turbo-module",
     "ios",
     "android"
   ],

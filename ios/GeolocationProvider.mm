@@ -33,7 +33,7 @@
   }
 
   NSTimeInterval timeout = MAX([parsed[@"timeout"] doubleValue] / 1000.0, 0.001);
-  if (!parsed[@"timeout"]) timeout = 15.0;
+  if (!parsed[@"timeout"]) timeout = 30.0;
   self.requestTimer = [NSTimer scheduledTimerWithTimeInterval:timeout
                                                      target:self
                                                    selector:@selector(requestTimedOut)
