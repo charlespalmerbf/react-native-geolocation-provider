@@ -1,0 +1,39 @@
+name: Feature request
+description: Suggest an improvement for this library.
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        # Feature request
+
+        Please describe the problem first, then the behaviour you would like this library to support.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What limitation or use case is this feature intended to address?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: What should the library do differently?
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Have you tried any workaround or alternative approach?
+    validations:
+      required: false
+  - type: input
+    id: react-native-version
+    attributes:
+      label: React Native version
+      description: Which React Native version would this need to support?
+      placeholder: "0.x.x"
+    validations:
+      required: false
