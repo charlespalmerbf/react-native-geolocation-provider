@@ -1,5 +1,9 @@
 # react-native-geolocation-provider
 
+[![npm version](https://img.shields.io/npm/v/react-native-geolocation-provider.svg)](https://www.npmjs.com/package/react-native-geolocation-provider)
+[![npm downloads](https://img.shields.io/npm/dm/react-native-geolocation-provider.svg)](https://www.npmjs.com/package/react-native-geolocation-provider)
+[![license](https://img.shields.io/npm/l/react-native-geolocation-provider.svg)](https://github.com/charlespalmerbf/react-native-geolocation-provider/blob/main/LICENSE)
+
 Native Core Location and Android LocationManager bindings for React Native.
 
 ## React Native support
