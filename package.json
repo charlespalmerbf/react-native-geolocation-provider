@@ -1,11 +1,13 @@
 {
   "name": "react-native-geolocation-provider",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A geolocation provider specifically for react native",
+  "react-native": "./src/index.tsx",
   "main": "./lib/module/index.js",
   "types": "./lib/typescript/src/index.d.ts",
   "exports": {
     ".": {
+      "react-native": "./src/index.tsx",
       "react-native-geolocation-provider-source": "./src/index.tsx",
       "types": "./lib/typescript/src/index.d.ts",
       "default": "./lib/module/index.js"
