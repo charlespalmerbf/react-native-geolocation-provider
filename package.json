@@ -1,6 +1,6 @@
 {
   "name": "react-native-geolocation-provider",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "A geolocation provider specifically for react native",
   "react-native": "./src/index.tsx",
   "main": "./lib/module/index.js",
@@ -26,7 +26,6 @@
     "!ios/generated/**",
     "!ios/build",
     "!android/build",
-    "!android/app/build",
     "!android/gradle",
     "!android/gradlew",
     "!android/gradlew.bat",
