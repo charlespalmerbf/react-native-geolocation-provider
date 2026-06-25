@@ -9,6 +9,12 @@ export type GeolocationOptions = {
   fastestInterval?: number;
 };
 
+export type LocationAuthorizationStatus =
+  | 'granted'
+  | 'denied'
+  | 'restricted'
+  | 'notDetermined';
+
 export type GeolocationCoordinates = {
   latitude: number;
   longitude: number;
@@ -60,6 +66,12 @@ function ensureNativeObserver(options: GeolocationOptions): void {
     }
   );
   NativeGeolocationProvider.startObserving(serialise(options));
+}
+
+export function requestAuthorization(): Promise<LocationAuthorizationStatus> {
+  return NativeGeolocationProvider.requestAuthorization().then(
+    (status) => status as LocationAuthorizationStatus
+  );
 }
 
 export function getCurrentPosition(
@@ -128,4 +140,10 @@ export function stopObserving(): void {
   errorSubscription = undefined;
 }
 
-export default { getCurrentPosition, watchPosition, clearWatch, stopObserving };
+export default {
+  requestAuthorization,
+  getCurrentPosition,
+  watchPosition,
+  clearWatch,
+  stopObserving,
+};

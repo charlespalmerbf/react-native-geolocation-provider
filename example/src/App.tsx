@@ -9,6 +9,7 @@ import {
 import {
   clearWatch,
   getCurrentPosition,
+  requestAuthorization,
   watchPosition,
   type GeolocationError,
   type GeolocationPosition,
@@ -41,6 +42,15 @@ export default function App() {
 
   const logError = (label: string, error: GeolocationError) => {
     log(`${label} error ${error.code}: ${error.message}`);
+  };
+
+  const requestLocationPermission = () => {
+    log('Requesting location permission');
+    requestAuthorization()
+      .then((status) => log(`Location permission: ${status}`))
+      .catch((error: { message?: string }) =>
+        log(`Location permission error: ${error.message ?? 'Unknown error'}`)
+      );
   };
 
   const fetchCurrentPosition = () => {
@@ -89,13 +99,6 @@ export default function App() {
     <View style={styles.screen}>
       <StatusBar backgroundColor="#f6f7fb" barStyle="dark-content" />
       <View style={styles.container}>
-        <Text style={styles.title}>Geolocation Provider</Text>
-        <Text style={styles.description}>
-          Test one-shot location fetches and continuous watch updates.
-          Permission must be granted by the host app before requests can
-          succeed.
-        </Text>
-
         <View style={styles.card}>
           <Text style={styles.label}>Latest position</Text>
           <Text style={styles.value}>
@@ -111,6 +114,10 @@ export default function App() {
         </View>
 
         <View style={styles.actions}>
+          <Button
+            label="Request location permission"
+            onPress={requestLocationPermission}
+          />
           <Button label="Get current position" onPress={fetchCurrentPosition} />
           <Button
             label={
@@ -194,7 +201,7 @@ const styles = StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: '#f6f7fb',
-    paddingTop: 48,
+    paddingTop: 24,
     paddingBottom: 24,
   },
   container: {
@@ -202,16 +209,6 @@ const styles = StyleSheet.create({
     gap: 18,
     paddingHorizontal: 24,
     backgroundColor: '#f6f7fb',
-  },
-  title: {
-    color: '#101828',
-    fontSize: 28,
-    fontWeight: '700',
-  },
-  description: {
-    color: '#475467',
-    fontSize: 16,
-    lineHeight: 23,
   },
   card: {
     gap: 8,

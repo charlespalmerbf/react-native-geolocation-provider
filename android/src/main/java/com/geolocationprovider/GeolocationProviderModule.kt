@@ -14,15 +14,52 @@ import android.os.Looper
 import androidx.core.content.ContextCompat
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
+import com.facebook.react.modules.core.PermissionAwareActivity
+import com.facebook.react.modules.core.PermissionListener
 import org.json.JSONObject
 
 class GeolocationProviderModule(private val reactContext: ReactApplicationContext) :
-  NativeGeolocationProviderSpec(reactContext), LocationListener {
+  NativeGeolocationProviderSpec(reactContext), LocationListener, PermissionListener {
 
   private val locationManager =
     reactContext.getSystemService(Context.LOCATION_SERVICE) as LocationManager
   private val handler = Handler(Looper.getMainLooper())
   private var observing = false
+  private var authorizationPromise: Promise? = null
+
+  override fun requestAuthorization(promise: Promise) {
+    if (hasPermission()) {
+      promise.resolve("granted")
+      return
+    }
+
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+      promise.resolve("granted")
+      return
+    }
+
+    val activity = reactContext.currentActivity
+    if (activity == null) {
+      promise.reject("2", "No current activity is available to request location permission")
+      return
+    }
+
+    val permissionAwareActivity = activity as? PermissionAwareActivity
+    if (permissionAwareActivity == null) {
+      promise.reject("2", "Current activity cannot request location permission")
+      return
+    }
+
+    authorizationPromise = promise
+    permissionAwareActivity.requestPermissions(
+      arrayOf(
+        Manifest.permission.ACCESS_FINE_LOCATION,
+        Manifest.permission.ACCESS_COARSE_LOCATION
+      ),
+      LOCATION_PERMISSION_REQUEST,
+      this
+    )
+  }
 
   override fun getCurrentPosition(options: String, promise: Promise) {
     if (!hasPermission()) {
@@ -135,7 +172,20 @@ class GeolocationProviderModule(private val reactContext: ReactApplicationContex
   override fun invalidate() {
     stopObserving()
     handler.removeCallbacksAndMessages(null)
+    authorizationPromise = null
     super.invalidate()
+  }
+
+  override fun onRequestPermissionsResult(
+    requestCode: Int,
+    permissions: Array<out String>,
+    grantResults: IntArray
+  ): Boolean {
+    if (requestCode != LOCATION_PERMISSION_REQUEST) return false
+
+    authorizationPromise?.resolve(if (hasPermission()) "granted" else "denied")
+    authorizationPromise = null
+    return true
   }
 
   private fun hasPermission(): Boolean =
@@ -167,5 +217,6 @@ class GeolocationProviderModule(private val reactContext: ReactApplicationContex
 
   companion object {
     const val NAME = NativeGeolocationProviderSpec.NAME
+    private const val LOCATION_PERMISSION_REQUEST = 1001
   }
 }

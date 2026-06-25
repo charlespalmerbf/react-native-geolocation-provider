@@ -27,10 +27,10 @@ yarn add react-native-geolocation-provider
 cd ios && pod install
 ```
 
-The application remains responsible for requesting runtime location permission.
-Add `NSLocationWhenInUseUsageDescription` to the iOS application Info.plist.
-Android coarse and fine location permissions are merged from this library's
-manifest.
+The application remains responsible for deciding when to request runtime
+location permission. Add `NSLocationWhenInUseUsageDescription` to the iOS
+application Info.plist. Android coarse and fine location permissions are merged
+from this library's manifest.
 
 ## Repository structure
 
@@ -60,11 +60,11 @@ cd ../..
 yarn example ios
 ```
 
-The example app does not request runtime location permission automatically. Grant
-location permission in the host app or device settings before testing. On real
-devices, the first high-accuracy GPS fix can still take several seconds,
-especially indoors. Keeping `watchPosition` active can warm the device location
-provider before a one-shot request.
+The example app does not request runtime location permission automatically on
+startup. Tap its permission button before testing, or grant location permission
+from device settings. On real devices, the first high-accuracy GPS fix can still
+take several seconds, especially indoors. Keeping `watchPosition` active can
+warm the device location provider before a one-shot request.
 
 ## Improvements over the community package
 
@@ -77,6 +77,18 @@ provider before a one-shot request.
 - Uses a 30 second default current-location timeout for slower GPS cold starts.
 
 ## Current location
+
+```ts
+import { requestAuthorization } from 'react-native-geolocation-provider';
+
+const status = await requestAuthorization();
+```
+
+### `requestAuthorization()`
+
+Requests location permission and resolves with `granted`, `denied`,
+`restricted`, or `notDetermined`. Location is not requested automatically by the
+library.
 
 ```ts
 import { getCurrentPosition } from 'react-native-geolocation-provider';
@@ -147,9 +159,9 @@ Stops all watchers and removes native location subscriptions.
 
 ## API surface
 
-Documented public methods are `getCurrentPosition`, `watchPosition`,
-`clearWatch`, and `stopObserving`. There are no additional public methods.
-Native event emitters are internal implementation details.
+Documented public methods are `requestAuthorization`, `getCurrentPosition`,
+`watchPosition`, `clearWatch`, and `stopObserving`. There are no additional
+public methods. Native event emitters are internal implementation details.
 
 Positions contain W3C-style `coords` and millisecond `timestamp` values. Errors
 use codes `1` (permission), `2` (unavailable), and `3` (timeout).

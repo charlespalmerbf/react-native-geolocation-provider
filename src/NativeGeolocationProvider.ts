@@ -5,6 +5,7 @@ import {
 } from 'react-native';
 
 export interface Spec extends TurboModule {
+  requestAuthorization(): Promise<string>;
   getCurrentPosition(options: string): Promise<string>;
   startObserving(options: string): void;
   stopObserving(): void;

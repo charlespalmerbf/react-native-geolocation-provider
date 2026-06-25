@@ -5,6 +5,7 @@ let mockEmitLocation: (payload: string) => void;
 jest.mock('../NativeGeolocationProvider', () => ({
   __esModule: true,
   default: {
+    requestAuthorization: jest.fn<() => Promise<string>>(),
     getCurrentPosition: jest.fn<() => Promise<string>>(),
     startObserving: jest.fn(),
     stopObserving: jest.fn(),
@@ -17,7 +18,12 @@ jest.mock('../NativeGeolocationProvider', () => ({
 }));
 
 import NativeGeolocationProvider from '../NativeGeolocationProvider';
-import { clearWatch, getCurrentPosition, watchPosition } from '../index';
+import {
+  clearWatch,
+  getCurrentPosition,
+  requestAuthorization,
+  watchPosition,
+} from '../index';
 
 const mockNativeModule = jest.mocked(NativeGeolocationProvider);
 
@@ -40,6 +46,12 @@ it('fetches and parses the current native position', async () => {
   );
 
   await expect(getCurrentPosition()).resolves.toEqual(position);
+});
+
+it('requests native location authorization', async () => {
+  mockNativeModule.requestAuthorization.mockResolvedValue('granted');
+
+  await expect(requestAuthorization()).resolves.toBe('granted');
 });
 
 it('forwards native updates and stops the final watcher', () => {

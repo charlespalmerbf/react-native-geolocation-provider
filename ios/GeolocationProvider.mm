@@ -3,19 +3,45 @@
 @interface GeolocationProvider ()
 @property(nonatomic, strong) CLLocationManager *watchManager;
 @property(nonatomic, strong) CLLocationManager *requestManager;
+@property(nonatomic, strong) CLLocationManager *permissionManager;
 @property(nonatomic, copy) RCTPromiseResolveBlock requestResolve;
 @property(nonatomic, copy) RCTPromiseRejectBlock requestReject;
+@property(nonatomic, copy) RCTPromiseResolveBlock authorizationResolve;
 @property(nonatomic, strong) NSTimer *requestTimer;
 @end
 
 @implementation GeolocationProvider
 
+- (void)requestAuthorization:(RCTPromiseResolveBlock)resolve
+                      reject:(RCTPromiseRejectBlock)reject
+{
+  if (!NSThread.isMainThread) {
+    dispatch_async(dispatch_get_main_queue(), ^{
+      [self requestAuthorization:resolve reject:reject];
+    });
+    return;
+  }
+
+  CLAuthorizationStatus status = [self authorizationStatus];
+  if (status != kCLAuthorizationStatusNotDetermined) {
+    resolve([self authorizationStatusString:status]);
+    return;
+  }
+
+  self.authorizationResolve = resolve;
+  self.permissionManager = [CLLocationManager new];
+  self.permissionManager.delegate = self;
+  [self.permissionManager requestWhenInUseAuthorization];
+}
+
 - (void)getCurrentPosition:(NSString *)options
                     resolve:(RCTPromiseResolveBlock)resolve
                      reject:(RCTPromiseRejectBlock)reject
 {
-  if (![self hasLocationPermission]) {
-    reject(@"1", @"Location permission has not been granted", nil);
+  if (!NSThread.isMainThread) {
+    dispatch_async(dispatch_get_main_queue(), ^{
+      [self getCurrentPosition:options resolve:resolve reject:reject];
+    });
     return;
   }
 
@@ -25,6 +51,17 @@
   self.requestManager = [self configuredManager:parsed];
   self.requestManager.delegate = self;
 
+  CLAuthorizationStatus status = [self authorizationStatus];
+  if (![self isLocationPermissionAllowed:status]) {
+    [self finishRequestWithCode:1 message:@"Location permission has not been granted"];
+    return;
+  }
+
+  [self startCurrentLocationRequestWithOptions:parsed];
+}
+
+- (void)startCurrentLocationRequestWithOptions:(NSDictionary *)parsed
+{
   CLLocation *cached = self.requestManager.location;
   NSTimeInterval maximumAge = [parsed[@"maximumAge"] doubleValue] / 1000.0;
   if (cached && maximumAge > 0 && -[cached.timestamp timeIntervalSinceNow] <= maximumAge) {
@@ -44,24 +81,45 @@
 
 - (void)startObserving:(NSString *)options
 {
-  if (self.watchManager) return;
-  if (![self hasLocationPermission]) {
-    [self emitOnLocationError:[self errorJSON:1 message:@"Location permission has not been granted"]];
+  if (!NSThread.isMainThread) {
+    dispatch_async(dispatch_get_main_queue(), ^{
+      [self startObserving:options];
+    });
     return;
   }
+
+  if (self.watchManager) return;
 
   NSDictionary *parsed = [self optionsFromJSON:options];
   self.watchManager = [self configuredManager:parsed];
   self.watchManager.delegate = self;
+
+  CLAuthorizationStatus status = [self authorizationStatus];
+  if (![self isLocationPermissionAllowed:status]) {
+    [self emitOnLocationError:[self errorJSON:1 message:@"Location permission has not been granted"]];
+    [self clearWatch];
+    return;
+  }
+
+  [self startLocationWatchWithOptions:parsed];
+}
+
+- (void)startLocationWatchWithOptions:(NSDictionary *)parsed
+{
   self.watchManager.distanceFilter = parsed[@"distanceFilter"] ? [parsed[@"distanceFilter"] doubleValue] : kCLDistanceFilterNone;
   [self.watchManager startUpdatingLocation];
 }
 
 - (void)stopObserving
 {
-  [self.watchManager stopUpdatingLocation];
-  self.watchManager.delegate = nil;
-  self.watchManager = nil;
+  if (!NSThread.isMainThread) {
+    dispatch_async(dispatch_get_main_queue(), ^{
+      [self stopObserving];
+    });
+    return;
+  }
+
+  [self clearWatch];
 }
 
 - (void)locationManager:(CLLocationManager *)manager didUpdateLocations:(NSArray<CLLocation *> *)locations
@@ -86,6 +144,27 @@
   }
 }
 
+- (void)locationManagerDidChangeAuthorization:(CLLocationManager *)manager
+{
+  [self handleAuthorizationChangeForManager:manager status:manager.authorizationStatus];
+}
+
+- (void)locationManager:(CLLocationManager *)manager didChangeAuthorizationStatus:(CLAuthorizationStatus)status
+{
+  [self handleAuthorizationChangeForManager:manager status:status];
+}
+
+- (void)handleAuthorizationChangeForManager:(CLLocationManager *)manager status:(CLAuthorizationStatus)status
+{
+  if (status == kCLAuthorizationStatusNotDetermined) return;
+
+  if (manager == self.permissionManager) {
+    RCTPromiseResolveBlock resolve = self.authorizationResolve;
+    [self clearAuthorizationRequest];
+    if (resolve) resolve([self authorizationStatusString:status]);
+  }
+}
+
 - (CLLocationManager *)configuredManager:(NSDictionary *)options
 {
   CLLocationManager *manager = [CLLocationManager new];
@@ -95,11 +174,27 @@
   return manager;
 }
 
-- (BOOL)hasLocationPermission
+- (CLAuthorizationStatus)authorizationStatus
 {
-  CLAuthorizationStatus status = CLLocationManager.authorizationStatus;
+  if (@available(iOS 14.0, *)) {
+    return CLLocationManager.authorizationStatus;
+  }
+
+  return [CLLocationManager authorizationStatus];
+}
+
+- (BOOL)isLocationPermissionAllowed:(CLAuthorizationStatus)status
+{
   return status == kCLAuthorizationStatusAuthorizedWhenInUse ||
     status == kCLAuthorizationStatusAuthorizedAlways;
+}
+
+- (NSString *)authorizationStatusString:(CLAuthorizationStatus)status
+{
+  if ([self isLocationPermissionAllowed:status]) return @"granted";
+  if (status == kCLAuthorizationStatusRestricted) return @"restricted";
+  if (status == kCLAuthorizationStatusNotDetermined) return @"notDetermined";
+  return @"denied";
 }
 
 - (NSDictionary *)optionsFromJSON:(NSString *)json
@@ -162,6 +257,20 @@
   self.requestManager = nil;
   self.requestResolve = nil;
   self.requestReject = nil;
+}
+
+- (void)clearWatch
+{
+  [self.watchManager stopUpdatingLocation];
+  self.watchManager.delegate = nil;
+  self.watchManager = nil;
+}
+
+- (void)clearAuthorizationRequest
+{
+  self.permissionManager.delegate = nil;
+  self.permissionManager = nil;
+  self.authorizationResolve = nil;
 }
 
 - (std::shared_ptr<facebook::react::TurboModule>)getTurboModule:
