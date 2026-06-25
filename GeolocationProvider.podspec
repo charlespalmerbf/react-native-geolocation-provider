@@ -14,6 +14,10 @@ Pod::Spec.new do |s|
   s.source       = { :git => "https://github.com/charlespalmerbf/react-native-geolocation-provider.git", :tag => "#{s.version}" }
 
   s.source_files = "ios/**/*.{h,m,mm,swift,cpp}"
+  s.exclude_files = [
+    "ios/generated/**/*",
+    "ios/**/ReactCodegen/**/*",
+  ]
   s.private_header_files = "ios/**/*.h"
 
   install_modules_dependencies(s)
