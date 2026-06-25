@@ -178,7 +178,7 @@ class GeolocationProviderModule(private val reactContext: ReactApplicationContex
 
   override fun onRequestPermissionsResult(
     requestCode: Int,
-    permissions: Array<out String>,
+    permissions: Array<String>,
     grantResults: IntArray
   ): Boolean {
     if (requestCode != LOCATION_PERMISSION_REQUEST) return false
